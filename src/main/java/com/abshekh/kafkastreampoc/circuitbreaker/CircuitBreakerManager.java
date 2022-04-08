@@ -43,10 +43,10 @@ public class CircuitBreakerManager {
                     final var stateTransition = event.getStateTransition();
                     if (stateTransition.equals(CLOSED_TO_OPEN) || stateTransition.equals(HALF_OPEN_TO_OPEN)) {
                         bindingsController.stop(consumer);
-                        log.info("State of {} is STOPPED", consumer);
+                        log.info("State of {}: STOPPED", consumer);
                     } else if (stateTransition.equals(OPEN_TO_HALF_OPEN)) {
                         bindingsController.start(consumer);
-                        log.info("State of {} has STARTED", consumer);
+                        log.info("State of {}: STARTED", consumer);
                     }
                 });
     }
