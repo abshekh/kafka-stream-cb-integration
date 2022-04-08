@@ -18,7 +18,7 @@ spring.cloud.stream.bindings:
     destination: topic2
 
 spring.cloud.stream:
-#  function.definition: topicConsumer;topic2Consumer;topicProducer
+  #function.definition: topicConsumer;topic2Consumer;topicProducer
   function.definition: topic2Consumer
   kafka.streams:
     bindings:
@@ -32,7 +32,9 @@ spring.cloud.stream:
 
 
 circuitbreaker.instances:
-  instance-topic2:
+  cb-instance-topic:
+    - topicConsumer-in-0
+  cb-instance-topic2:
     - topic2Consumer-in-0
 
 resilience4j.circuitbreaker:
@@ -51,7 +53,9 @@ resilience4j.circuitbreaker:
       record-exceptions:
         - org.springframework.web.client.RestClientException
   instances:
-    instance-topic2:
+    cb-instance-topic:
+      base-config: default
+    cb-instance-topic2:
       base-config: default
 
 resilience4j.retry:
@@ -63,6 +67,8 @@ resilience4j.retry:
       retry-exceptions:
         - org.springframework.web.client.RestClientException
   instances:
-    instance-topic2:
+    retry-instance-topic:
+      base-config: default
+    retry-instance-topic2:
       base-config: default
 

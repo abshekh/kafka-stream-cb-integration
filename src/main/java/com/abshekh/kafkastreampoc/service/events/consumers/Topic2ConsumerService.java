@@ -20,10 +20,12 @@ public class Topic2ConsumerService {
 
     @Bean
     public Consumer<KStream<Object, Topic2Message>> topic2Consumer() {
-        return input -> input.foreach((k, val) -> {
-            log.debug("topic2Consumer: {}", val);
-            pocRestClient.restClient(val.getMessage());
-            log.debug("topic2Consumer end...");
-        });
+        return input -> input.foreach(this::businessLogic);
+    }
+
+    private void businessLogic(Object key, Topic2Message val) {
+        log.debug("topic2Consumer: {}", val);
+        pocRestClient.restClient2(val.getMessage());
+        log.debug("topic2Consumer end...");
     }
 }
