@@ -4,12 +4,10 @@ import com.abshekh.kafkastreampoc.circuitbreaker.config.CircuitBreakerConfigurat
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnStateTransitionEvent;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cloud.stream.binder.RequeueCurrentMessageException;
 import org.springframework.cloud.stream.binding.BindingsLifecycleController;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Optional;
 
