@@ -1,0 +1,68 @@
+spring.application.name: kafka-stream-poc
+server.port: 8080
+
+logging.level:
+  org.springframework: INFO
+  com.abshekh: DEBUG
+
+spring.cloud.stream.bindings:
+  topicConsumer-in-0:
+    destination: topic1
+    group: topic-consumer-group-1
+  topicProducer-out-0:
+    destination: topic1
+  topic2Consumer-in-0:
+    destination: topic2
+    group: topic2-consumer-group-1
+  topic2Producer-out-0:
+    destination: topic2
+
+spring.cloud.stream:
+  #  function.definition: topicConsumer;topic2Consumer;topicProducer
+  function.definition: topic2Consumer
+  kafka.streams:
+    bindings:
+      topicConsumer-in-0.consumer.configuration.application.id: ${spring.application.name}-topicConsumer
+      topic2Consumer-in-0.consumer.configuration.application.id: ${spring.application.name}-topic2Consumer
+    binder:
+      configuration:
+        commit.interval.ms: 1000
+        processing.guarantee: exactly_once_v2
+      deserializationExceptionHandler: logAndContinue
+
+
+circuitbreaker.instances:
+  instance-topic2:
+    - topic2Consumer-in-0
+
+resilience4j.circuitbreaker:
+  circuit-breaker-aspect-order: 1
+  configs:
+    default:
+      wait-duration-in-open-state: 60s
+      permitted-number-of-calls-in-half-open-state: 3
+      automatic-transition-from-open-to-half-open-enabled: true
+      sliding-window-type: count-based
+      sliding-window-size: 1
+      minimum-number-of-calls: 1
+      slow-call-duration-threshold: 10s
+      slow-call-rate-threshold: 60
+      failure-rate-threshold: 60
+      record-exceptions:
+        - org.springframework.web.client.RestClientException
+  instances:
+    instance-topic2:
+      base-config: default
+
+resilience4j.retry:
+  retry-aspect-order: 2
+  configs:
+    default:
+      max-attempts: 3
+      wait-duration: 1s
+      retry-exceptions:
+        - org.springframework.web.client.RestClientException
+  instances:
+    instance-topic2:
+      base-config: default
+
