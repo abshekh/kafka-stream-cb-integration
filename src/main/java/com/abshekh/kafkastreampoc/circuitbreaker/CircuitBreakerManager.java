@@ -4,11 +4,14 @@ import com.abshekh.kafkastreampoc.circuitbreaker.config.CircuitBreakerConfigurat
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnStateTransitionEvent;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cloud.stream.binder.RequeueCurrentMessageException;
 import org.springframework.cloud.stream.binding.BindingsLifecycleController;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Optional;
 
 import static io.github.resilience4j.circuitbreaker.CircuitBreaker.StateTransition.*;
 
@@ -38,8 +41,10 @@ public class CircuitBreakerManager {
     private void controlStateTransition(CircuitBreakerOnStateTransitionEvent event) {
         log.info("{} circuit breaker: {}", event.getCircuitBreakerName(), event.getStateTransition());
 
-        circuitBreakerConfiguration.getInstances()
-                .getOrDefault(event.getCircuitBreakerName(), new ArrayList<>()).forEach(consumer -> {
+        Optional.ofNullable(circuitBreakerConfiguration.getInstances())
+                .map(map -> map.get(event.getCircuitBreakerName()))
+                .orElse(Collections.emptyList())
+                .forEach(consumer -> {
                     final var stateTransition = event.getStateTransition();
                     if (stateTransition.equals(CLOSED_TO_OPEN) || stateTransition.equals(HALF_OPEN_TO_OPEN)) {
                         bindingsController.stop(consumer);
