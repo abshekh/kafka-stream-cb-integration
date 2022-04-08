@@ -46,7 +46,7 @@ public class CircuitBreakerManager {
                         log.info("State of {} is STOPPED", consumer);
                     } else if (stateTransition.equals(OPEN_TO_HALF_OPEN)) {
                         bindingsController.start(consumer);
-                        log.info("State of {} is STARTED", consumer);
+                        log.info("State of {} has STARTED", consumer);
                     }
                 });
     }
