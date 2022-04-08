@@ -4,7 +4,6 @@ import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cloud.stream.binder.RequeueCurrentMessageException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -38,6 +37,6 @@ public class PocRestClient {
 //        if(random.nextBoolean()) {
 //            throw new RequeueCurrentMessageException(e);
 //        }
-        throw new RequeueCurrentMessageException(e);
+//        throw new RequeueCurrentMessageException(e);
     }
 }

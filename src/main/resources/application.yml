@@ -18,7 +18,7 @@ spring.cloud.stream.bindings:
     destination: topic2
 
 spring.cloud.stream:
-  #  function.definition: topicConsumer;topic2Consumer;topicProducer
+#  function.definition: topicConsumer;topic2Consumer;topicProducer
   function.definition: topic2Consumer
   kafka.streams:
     bindings:

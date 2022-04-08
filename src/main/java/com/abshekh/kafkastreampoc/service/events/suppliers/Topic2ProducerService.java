@@ -1,19 +1,19 @@
-package com.abshekh.kafkastreampoc.events.suppliers;
+package com.abshekh.kafkastreampoc.service.events.suppliers;
 
 import com.abshekh.kafkastreampoc.model.kafka.Topic2Message;
 import com.abshekh.kafkastreampoc.model.request.Topic2Request;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.stream.function.StreamBridge;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.util.UUID;
 
-@Component
+@Service
 @Slf4j
-public class Topic2Producer {
+public class Topic2ProducerService {
     private final StreamBridge streamBridge;
 
-    public Topic2Producer(StreamBridge streamBridge) {
+    public Topic2ProducerService(StreamBridge streamBridge) {
         this.streamBridge = streamBridge;
     }
 

@@ -1,29 +1,31 @@
-package com.abshekh.kafkastreampoc.events.consumers;
+package com.abshekh.kafkastreampoc.service.events.consumers;
 
 import com.abshekh.kafkastreampoc.model.kafka.Sensor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.streams.kstream.KStream;
-import org.apache.kafka.streams.processor.api.ProcessorSupplier;
 import org.springframework.cloud.stream.annotation.StreamRetryTemplate;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.retry.RetryContext;
 import org.springframework.retry.RetryPolicy;
 import org.springframework.retry.backoff.FixedBackOffPolicy;
 import org.springframework.retry.policy.SimpleRetryPolicy;
 import org.springframework.retry.support.RetryTemplate;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.util.Random;
 import java.util.function.Consumer;
 
-@Component("topicConsumer")
+@Service
 @Slf4j
-public class TopicConsumer implements Consumer<KStream<Object, Sensor>> {
+public class TopicConsumerService {
     private final Random random;
 
-    public TopicConsumer() {
+    public TopicConsumerService() {
         random = new Random();
     }
 
+    @Bean
     @StreamRetryTemplate
     private RetryTemplate topicRetryTemplate() {
         RetryTemplate retryTemplate = new RetryTemplate();
@@ -38,11 +40,13 @@ public class TopicConsumer implements Consumer<KStream<Object, Sensor>> {
         return retryTemplate;
     }
 
-    @Override
-    public void accept(KStream<Object, Sensor> message) {
-        message
-                .foreach((k, val) -> topicRetryTemplate().execute(retryContext -> businessLogic(retryContext, val),
-                        retryContext -> retryLogic(retryContext, val)));
+    @Bean
+    public Consumer<KStream<Object, Sensor>> topicConsumer(@Lazy RetryTemplate topicRetryTemplate) {
+        return input -> input.foreach((k, val) ->
+                topicRetryTemplate.execute(
+                        retryContext -> businessLogic(retryContext, val),
+                        retryContext -> retryLogic(retryContext, val))
+        );
     }
 
     private Object businessLogic(RetryContext retryContext, Sensor val) {
@@ -59,10 +63,5 @@ public class TopicConsumer implements Consumer<KStream<Object, Sensor>> {
     private Object retryLogic(RetryContext retryContext, Sensor val) {
         log.debug("topicConsumer retry logic...");
         return null;
-    }
-
-    @Override
-    public Consumer<KStream<Object, Sensor>> andThen(Consumer<? super KStream<Object, Sensor>> after) {
-        return Consumer.super.andThen(after);
     }
 }
