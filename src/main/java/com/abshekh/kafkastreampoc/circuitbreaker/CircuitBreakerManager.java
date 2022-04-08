@@ -1,6 +1,6 @@
 package com.abshekh.kafkastreampoc.circuitbreaker;
 
-import com.abshekh.kafkastreampoc.circuitbreaker.config.CircuitBreakerConfigProperties;
+import com.abshekh.kafkastreampoc.circuitbreaker.config.CircuitBreakerConfiguration;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.circuitbreaker.event.CircuitBreakerOnStateTransitionEvent;
 import lombok.extern.slf4j.Slf4j;
@@ -17,14 +17,14 @@ import static io.github.resilience4j.circuitbreaker.CircuitBreaker.StateTransiti
 public class CircuitBreakerManager {
     private final CircuitBreakerRegistry circuitBreakerRegistry;
     private final BindingsLifecycleController bindingsController;
-    private final CircuitBreakerConfigProperties circuitBreakerConfigProperties;
+    private final CircuitBreakerConfiguration circuitBreakerConfiguration;
 
     public CircuitBreakerManager(CircuitBreakerRegistry circuitBreakerRegistry,
                                  BindingsLifecycleController bindingsController,
-                                 CircuitBreakerConfigProperties circuitBreakerConfigProperties) {
+                                 CircuitBreakerConfiguration circuitBreakerConfiguration) {
         this.circuitBreakerRegistry = circuitBreakerRegistry;
         this.bindingsController = bindingsController;
-        this.circuitBreakerConfigProperties = circuitBreakerConfigProperties;
+        this.circuitBreakerConfiguration = circuitBreakerConfiguration;
     }
 
     @PostConstruct
@@ -38,7 +38,7 @@ public class CircuitBreakerManager {
     private void controlStateTransition(CircuitBreakerOnStateTransitionEvent event) {
         log.info("{} circuit breaker: {}", event.getCircuitBreakerName(), event.getStateTransition());
 
-        circuitBreakerConfigProperties.getInstances()
+        circuitBreakerConfiguration.getInstances()
                 .getOrDefault(event.getCircuitBreakerName(), new ArrayList<>()).forEach(consumer -> {
                     final var stateTransition = event.getStateTransition();
                     if (stateTransition.equals(CLOSED_TO_OPEN) || stateTransition.equals(HALF_OPEN_TO_OPEN)) {

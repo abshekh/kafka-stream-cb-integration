@@ -10,6 +10,6 @@ import java.util.Map;
 @Data
 @Configuration
 @ConfigurationProperties("circuit-breaker")
-public class CircuitBreakerConfigProperties {
+public class CircuitBreakerConfiguration {
     private Map<String, List<String>> instances;
 }
