@@ -27,30 +27,9 @@ public class Topic2ConsumerService {
         return input -> input.foreach(this::businessLogic);
     }
 
-    @StreamRetryTemplate
-    RetryTemplate customRetryTemplate() {
-        return RetryTemplate.builder()
-                .maxAttempts(3)
-                .fixedBackoff(1)
-                .notRetryOn(CallNotPermittedException.class)
-                .build();
-    }
-
     private void businessLogic(Object key, Topic2Message val) {
         log.debug("topic2Consumer: {}", val);
-        customRetryTemplate().execute(
-                retryContext -> {
-                    log.debug("inside spring retry: {}", retryContext.getRetryCount());
-                    pocRestClient.restClient2(val.getMessage());
-                    return null;
-                },
-                retryContext -> {
-                    if(retryContext.getLastThrowable() instanceof CallNotPermittedException) {
-                        throw new RequeueCurrentMessageException(retryContext.getLastThrowable());
-                    }
-                    log.debug("inside spring retry recovery");
-                    return null;
-                });
+        pocRestClient.restClient2(val.getMessage());
         log.debug("topic2Consumer end...");
     }
 }
