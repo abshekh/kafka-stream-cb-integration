@@ -64,7 +64,6 @@ resilience4j.retry:
   configs:
     default:
       max-attempts: 3
-      wait-duration: 1s
       retry-exceptions:
         - org.springframework.web.client.RestClientException
   instances:
