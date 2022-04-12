@@ -2,7 +2,6 @@ package com.abshekh.kafkastreampoc.circuitbreaker.config;
 
 import io.github.resilience4j.common.retry.configuration.RetryConfigCustomizer;
 import io.github.resilience4j.core.IntervalFunction;
-import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -16,8 +15,8 @@ public class CircuitBreakerCustomizer {
     }
 
     @Bean
-    public RetryConfigCustomizer retryInstanceTopic2Customizer() {
+    public RetryConfigCustomizer retryInstanceTopic3Customizer() {
         return RetryConfigCustomizer
-                .of("retry-instance-topic2", builder -> builder.intervalFunction(jitterExponentialFunction()));
+                .of("retry-instance-topic3", builder -> builder.intervalFunction(jitterExponentialFunction()));
     }
 }

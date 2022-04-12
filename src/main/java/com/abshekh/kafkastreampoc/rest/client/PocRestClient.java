@@ -21,6 +21,8 @@ public class PocRestClient {
     private static final String RETRY_INSTANCE = "retry-instance-topic";
     private static final String CB_INSTANCE2 = "cb-instance-topic2";
     private static final String RETRY_INSTANCE2 = "retry-instance-topic2";
+    private static final String CB_INSTANCE3 = "cb-instance-topic3";
+    private static final String RETRY_INSTANCE3 = "retry-instance-topic3";
 
 
     //    @CircuitBreaker(name = CB_INSTANCE)
@@ -32,6 +34,12 @@ public class PocRestClient {
     @CircuitBreaker(name = CB_INSTANCE2)
     @Retry(name = RETRY_INSTANCE2)
     public void restClient2(String message) {
+        internalRestClient(message);
+    }
+
+    @CircuitBreaker(name = CB_INSTANCE3)
+    @Retry(name = RETRY_INSTANCE3)
+    public void restClient3(String message) {
         internalRestClient(message);
     }
 

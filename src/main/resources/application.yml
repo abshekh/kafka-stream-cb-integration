@@ -16,15 +16,21 @@ spring.cloud.stream.bindings:
     group: topic2-consumer-group-1
   topic2Producer-out-0:
     destination: topic2
+  topic3Consumer-in-0:
+    destination: topic3
+    group: topic3-consumer-group-1
+  topic3Producer-out-0:
+    destination: topic3
 
 spring.cloud.stream:
 #  function.definition: topicConsumer;topic2Consumer;topicProducer
-  function.definition: topicConsumer;topic2Consumer;
+  function.definition: topicConsumer;topic2Consumer;topic3Consumer
 #  function.definition: topic2Consumer
   kafka.streams:
     bindings:
       topicConsumer-in-0.consumer.configuration.application.id: ${spring.application.name}-topicConsumer
       topic2Consumer-in-0.consumer.configuration.application.id: ${spring.application.name}-topic2Consumer
+      topic3Consumer-in-0.consumer.configuration.application.id: ${spring.application.name}-topic3Consumer
     binder:
       configuration:
         commit.interval.ms: 1000
@@ -37,6 +43,8 @@ circuitbreaker.instances:
     - topicConsumer-in-0
   cb-instance-topic2:
     - topic2Consumer-in-0
+  cb-instance-topic3:
+    - topic3Consumer-in-0
 
 resilience4j.circuitbreaker:
   circuit-breaker-aspect-order: 1
@@ -58,6 +66,8 @@ resilience4j.circuitbreaker:
       base-config: default
     cb-instance-topic2:
       base-config: default
+    cb-instance-topic3:
+      base-config: default
 
 resilience4j.retry:
   retry-aspect-order: 2
@@ -70,5 +80,7 @@ resilience4j.retry:
     retry-instance-topic:
       base-config: default
     retry-instance-topic2:
+      base-config: default
+    retry-instance-topic3:
       base-config: default
 
