@@ -2,9 +2,13 @@ package com.abshekh.kafkastreampoc.service.events.consumers;
 
 import com.abshekh.kafkastreampoc.model.kafka.Topic2Message;
 import com.abshekh.kafkastreampoc.rest.client.PocRestClient;
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.streams.kstream.KStream;
+import org.springframework.cloud.stream.annotation.StreamRetryTemplate;
+import org.springframework.cloud.stream.binder.RequeueCurrentMessageException;
 import org.springframework.context.annotation.Bean;
+import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.function.Consumer;

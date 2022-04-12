@@ -18,8 +18,8 @@ public class PocRestClient {
     private static final String CB_INSTANCE2 = "cb-instance-topic2";
     private static final String RETRY_INSTANCE2 = "retry-instance-topic2";
 
-    @CircuitBreaker(name = CB_INSTANCE)
-    @Retry(name = RETRY_INSTANCE)
+//    @CircuitBreaker(name = CB_INSTANCE)
+//    @Retry(name = RETRY_INSTANCE)
     public void restClient(String message) {
         internalRestClient(message);
     }

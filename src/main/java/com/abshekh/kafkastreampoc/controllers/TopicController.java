@@ -11,18 +11,25 @@ import reactor.core.publisher.Mono;
 @RestController
 @RequestMapping("/")
 @Slf4j
-public class Topic2Controller {
+public class TopicController {
     private final Topic2ProducerService topic2ProducerService;
     private final PocRestClient pocRestClient;
 
-    public Topic2Controller(Topic2ProducerService topic2ProducerService, PocRestClient pocRestClient) {
+    public TopicController(Topic2ProducerService topic2ProducerService, PocRestClient pocRestClient) {
         this.topic2ProducerService = topic2ProducerService;
         this.pocRestClient = pocRestClient;
     }
 
-    @PostMapping
+    @PostMapping("/1")
     @ResponseStatus(HttpStatus.CREATED)
-    public Mono<String> postTopic2Message(@RequestBody Topic2Request request) {
+    public Mono<String> postTopic2Message() {
+        topic2ProducerService.topicPublisher();
+        return Mono.just("ok");
+    }
+
+    @PostMapping("/2")
+    @ResponseStatus(HttpStatus.CREATED)
+    public Mono<String> postTopic1Message(@RequestBody Topic2Request request) {
         log.debug("postTopic2Message: {}", request);
         topic2ProducerService.topic2Publisher(request);
         return Mono.just("ok");
