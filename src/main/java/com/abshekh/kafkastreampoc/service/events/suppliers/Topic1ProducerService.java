@@ -11,10 +11,10 @@ import java.util.function.Supplier;
 
 @Service
 @Slf4j
-public class TopicProducerService {
+public class Topic1ProducerService {
     private final Random random;
 
-    public TopicProducerService() {
+    public Topic1ProducerService() {
         this.random = new Random();
     }
 
