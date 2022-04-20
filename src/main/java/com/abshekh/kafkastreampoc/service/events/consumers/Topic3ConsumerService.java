@@ -20,8 +20,6 @@ import java.util.function.Consumer;
 @Slf4j
 public class Topic3ConsumerService {
     private final PocRestClient pocRestClient;
-    private final CircuitBreaker circuitBreakerInstanceTopic3;
-    private final Retry retryInstanceTopic3;
 
     @Bean
     public Consumer<KStream<Object, TopicMessage>> topic3Consumer() {
@@ -30,11 +28,7 @@ public class Topic3ConsumerService {
 
     private void businessLogic(Object key, TopicMessage val) {
         log.debug("topic3Consumer: {}", val);
-        var runnable = Decorators.ofCheckedRunnable(() -> pocRestClient.restClient(val.getMessage()))
-                .withCircuitBreaker(circuitBreakerInstanceTopic3)
-                .withRetry(retryInstanceTopic3)
-                .decorate();
-        Try.run(runnable);
+        pocRestClient.restClient3(val.getMessage());
         log.debug("topic3Consumer end...");
     }
 }

@@ -1,4 +1,4 @@
-package com.abshekh.kafkastreampoc.faulttolerance.config;
+package com.abshekh.kafkastreampoc.resilience.config;
 
 
 import io.github.resilience4j.ratelimiter.RateLimiter;
@@ -21,7 +21,7 @@ public class ResilienceRateLimiter {
     public RateLimiterConfig defaultRateLimiterConfig() {
         return RateLimiterConfig.custom()
                 .limitRefreshPeriod(Duration.ofSeconds(10))
-                .limitForPeriod(2)
+                .limitForPeriod(1)
                 .timeoutDuration(Duration.ofSeconds(25))
                 .build();
     }

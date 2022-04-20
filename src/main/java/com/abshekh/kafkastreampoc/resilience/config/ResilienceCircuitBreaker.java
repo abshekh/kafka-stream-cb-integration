@@ -1,4 +1,4 @@
-package com.abshekh.kafkastreampoc.faulttolerance.config;
+package com.abshekh.kafkastreampoc.resilience.config;
 
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
@@ -9,7 +9,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestClientException;
 
-import javax.annotation.PostConstruct;
 import java.time.Duration;
 
 @Configuration

@@ -22,9 +22,6 @@ import java.util.function.Consumer;
 @Slf4j
 public class Topic4ConsumerService {
     private final PocRestClient pocRestClient;
-    private final CircuitBreaker circuitBreakerInstanceTopic4;
-    private final Retry retryInstanceTopic4;
-    private final RateLimiter rateLimiterInstanceTopic4;
 
     @Bean
     public Consumer<KStream<Object, TopicMessage>> topic4Consumer() {
@@ -33,15 +30,7 @@ public class Topic4ConsumerService {
 
     private void businessLogic(Object key, TopicMessage val) {
         log.debug("topic4Consumer: {}", val);
-        log.debug("cb: {}, {}", circuitBreakerInstanceTopic4.getName(), circuitBreakerInstanceTopic4.getCircuitBreakerConfig());
-        log.debug("retry: {}, {}", retryInstanceTopic4.getName(), retryInstanceTopic4.getRetryConfig().getMaxAttempts());
-        log.debug("rate-limiter: {}, {}", rateLimiterInstanceTopic4.getName(), rateLimiterInstanceTopic4.getRateLimiterConfig().getLimitRefreshPeriod());
-        var runnable = Decorators.ofCheckedRunnable(() -> pocRestClient.restClient(val.getMessage()))
-                .withCircuitBreaker(circuitBreakerInstanceTopic4)
-                .withRateLimiter(rateLimiterInstanceTopic4)
-                .withRetry(retryInstanceTopic4)
-                .decorate();
-        Try.run(runnable);
+        pocRestClient.restClient4(val.getMessage());
         log.debug("topic4Consumer end...");
     }
 }

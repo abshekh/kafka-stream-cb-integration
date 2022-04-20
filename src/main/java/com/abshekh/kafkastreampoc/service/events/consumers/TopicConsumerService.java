@@ -3,6 +3,7 @@ package com.abshekh.kafkastreampoc.service.events.consumers;
 import com.abshekh.kafkastreampoc.model.kafka.Sensor;
 import com.abshekh.kafkastreampoc.rest.client.PocRestClient;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.processor.api.Processor;
@@ -18,13 +19,10 @@ import org.springframework.stereotype.Service;
 import java.util.function.Consumer;
 
 @Service
+@AllArgsConstructor
 @Slf4j
 public class TopicConsumerService {
     private final PocRestClient pocRestClient;
-
-    public TopicConsumerService(PocRestClient pocRestClient) {
-        this.pocRestClient = pocRestClient;
-    }
 
     @Bean
     public Consumer<KStream<Object, Sensor>> topicConsumer() {
@@ -44,7 +42,7 @@ public class TopicConsumerService {
         customRetryTemplate().execute(
                 retryContext -> {
                     log.debug("inside spring retry: {}", retryContext.getRetryCount());
-                    pocRestClient.restClient(val.getId());
+                    pocRestClient.restClient1(val.getId());
                     return null;
                 },
                 recoveryContext -> {

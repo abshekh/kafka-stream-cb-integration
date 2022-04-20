@@ -8,20 +8,18 @@ import io.github.resilience4j.retry.Retry;
 import io.vavr.control.Try;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import lombok.val;
 import org.apache.kafka.streams.kstream.KStream;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
 
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 @Service
 @Slf4j
 @AllArgsConstructor
 public class Topic2ConsumerService {
     private final PocRestClient pocRestClient;
-    private final CircuitBreaker circuitBreakerInstanceTopic2;
-    private final Retry retryInstanceTopic2;
 
     @Bean
     public Consumer<KStream<Object, TopicMessage>> topic2Consumer() {
@@ -30,11 +28,7 @@ public class Topic2ConsumerService {
 
     private void businessLogic(Object key, TopicMessage val) {
         log.debug("topic2Consumer: {}", val);
-        var runnable = Decorators.ofCheckedRunnable(() -> pocRestClient.restClient(val.getMessage()))
-                .withCircuitBreaker(circuitBreakerInstanceTopic2)
-                .withRetry(retryInstanceTopic2)
-                .decorate();
-        Try.run(runnable);
+        pocRestClient.restClient2(val.getMessage());
         log.debug("topic2Consumer end...");
     }
 }
