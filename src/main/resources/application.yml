@@ -21,63 +21,22 @@ spring.cloud.stream.bindings:
     group: topic3-consumer-group-1
   topic3Producer-out-0:
     destination: topic3
+  topic4Consumer-in-0:
+    destination: topic4
+    group: topic4-consumer-group-1
+  topic4Producer-out-0:
+    destination: topic4
 
 spring.cloud.stream:
-#  function.definition: topicConsumer;topic2Consumer;topicProducer
-  function.definition: topicConsumer;topic2Consumer;topic3Consumer
-#  function.definition: topic2Consumer
+  function.definition: topicConsumer;topic2Consumer;topic3Consumer;topic4Consumer;
   kafka.streams:
     bindings:
       topicConsumer-in-0.consumer.configuration.application.id: ${spring.application.name}-topicConsumer
       topic2Consumer-in-0.consumer.configuration.application.id: ${spring.application.name}-topic2Consumer
       topic3Consumer-in-0.consumer.configuration.application.id: ${spring.application.name}-topic3Consumer
+      topic4Consumer-in-0.consumer.configuration.application.id: ${spring.application.name}-topic4Consumer
     binder:
       configuration:
         commit.interval.ms: 1000
         processing.guarantee: exactly_once_v2
       deserializationExceptionHandler: logAndContinue
-
-
-circuitbreaker.instances:
-  cb-instance-topic:
-    - topicConsumer-in-0
-  cb-instance-topic2:
-    - topic2Consumer-in-0
-  cb-instance-topic3:
-    - topic3Consumer-in-0
-
-resilience4j.circuitbreaker:
-  configs:
-    default:
-      wait-duration-in-open-state: 60s
-      permitted-number-of-calls-in-half-open-state: 3
-      automatic-transition-from-open-to-half-open-enabled: true
-      sliding-window-type: count-based
-      sliding-window-size: 10
-      minimum-number-of-calls: 3
-      slow-call-duration-threshold: 10s
-      slow-call-rate-threshold: 60
-      failure-rate-threshold: 60
-      record-exceptions:
-        - org.springframework.web.client.RestClientException
-  instances:
-    cb-instance-topic:
-      base-config: default
-    cb-instance-topic2:
-      base-config: default
-    cb-instance-topic3:
-      base-config: default
-
-resilience4j.retry:
-  configs:
-    default:
-      max-attempts: 3
-      retry-exceptions:
-        - org.springframework.web.client.RestClientException
-  instances:
-    retry-instance-topic:
-      base-config: default
-    retry-instance-topic2:
-      base-config: default
-    retry-instance-topic3:
-      base-config: default

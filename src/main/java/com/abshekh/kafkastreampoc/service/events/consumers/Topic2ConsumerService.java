@@ -1,35 +1,40 @@
 package com.abshekh.kafkastreampoc.service.events.consumers;
 
-import com.abshekh.kafkastreampoc.model.kafka.Topic2Message;
+import com.abshekh.kafkastreampoc.model.kafka.TopicMessage;
 import com.abshekh.kafkastreampoc.rest.client.PocRestClient;
-import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.decorators.Decorators;
+import io.github.resilience4j.retry.Retry;
+import io.vavr.control.Try;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.apache.kafka.streams.kstream.KStream;
-import org.springframework.cloud.stream.annotation.StreamRetryTemplate;
-import org.springframework.cloud.stream.binder.RequeueCurrentMessageException;
 import org.springframework.context.annotation.Bean;
-import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.function.Consumer;
 
 @Service
 @Slf4j
+@AllArgsConstructor
 public class Topic2ConsumerService {
     private final PocRestClient pocRestClient;
-
-    public Topic2ConsumerService(PocRestClient pocRestClient) {
-        this.pocRestClient = pocRestClient;
-    }
+    private final CircuitBreaker circuitBreakerInstanceTopic2;
+    private final Retry retryInstanceTopic2;
 
     @Bean
-    public Consumer<KStream<Object, Topic2Message>> topic2Consumer() {
+    public Consumer<KStream<Object, TopicMessage>> topic2Consumer() {
         return input -> input.foreach(this::businessLogic);
     }
 
-    private void businessLogic(Object key, Topic2Message val) {
+    private void businessLogic(Object key, TopicMessage val) {
         log.debug("topic2Consumer: {}", val);
-        pocRestClient.restClient2(val.getMessage());
+        var runnable = Decorators.ofCheckedRunnable(() -> pocRestClient.restClient(val.getMessage()))
+                .withCircuitBreaker(circuitBreakerInstanceTopic2)
+                .withRetry(retryInstanceTopic2)
+                .decorate();
+        Try.run(runnable);
         log.debug("topic2Consumer end...");
     }
 }
