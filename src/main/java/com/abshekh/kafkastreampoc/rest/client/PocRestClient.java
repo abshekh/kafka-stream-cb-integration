@@ -1,15 +1,11 @@
 package com.abshekh.kafkastreampoc.rest.client;
 
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
-import io.github.resilience4j.common.retry.configuration.RetryConfigCustomizer;
-import io.github.resilience4j.core.IntervalFunction;
 import io.github.resilience4j.retry.annotation.Retry;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
 
 @Service

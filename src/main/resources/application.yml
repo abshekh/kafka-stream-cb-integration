@@ -47,15 +47,14 @@ circuitbreaker.instances:
     - topic3Consumer-in-0
 
 resilience4j.circuitbreaker:
-  circuit-breaker-aspect-order: 1
   configs:
     default:
       wait-duration-in-open-state: 60s
       permitted-number-of-calls-in-half-open-state: 3
       automatic-transition-from-open-to-half-open-enabled: true
       sliding-window-type: count-based
-      sliding-window-size: 1
-      minimum-number-of-calls: 1
+      sliding-window-size: 10
+      minimum-number-of-calls: 3
       slow-call-duration-threshold: 10s
       slow-call-rate-threshold: 60
       failure-rate-threshold: 60
@@ -70,7 +69,6 @@ resilience4j.circuitbreaker:
       base-config: default
 
 resilience4j.retry:
-  retry-aspect-order: 2
   configs:
     default:
       max-attempts: 3
@@ -83,4 +81,3 @@ resilience4j.retry:
       base-config: default
     retry-instance-topic3:
       base-config: default
-
