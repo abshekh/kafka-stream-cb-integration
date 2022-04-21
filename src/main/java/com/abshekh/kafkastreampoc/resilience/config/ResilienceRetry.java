@@ -10,6 +10,7 @@ import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.RetryRegistry;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestClientException;
@@ -18,6 +19,7 @@ import java.time.Duration;
 
 @Configuration
 @AllArgsConstructor
+@Slf4j
 public class ResilienceRetry {
     public static final String RETRY_INSTANCE_TOPIC_1 = "retry-instance-topic1";
     public static final String RETRY_INSTANCE_TOPIC_2 = "retry-instance-topic2";
@@ -37,6 +39,7 @@ public class ResilienceRetry {
                         RequestNotPermitted.class)
                 .intervalBiFunction((integer, objects) -> {
                     var exception = objects.getLeft();
+                    log.debug("retry: {}, is RequestNotPermitted: {}", integer, exception instanceof RequestNotPermitted);
                     if (exception instanceof CallNotPermittedException) {
                         var ex = (CallNotPermittedException) exception;
                         var intervalFunction = circuitBreakerRegistry.circuitBreaker(ex.getCausingCircuitBreakerName())
@@ -44,6 +47,9 @@ public class ResilienceRetry {
                                 .getWaitIntervalFunctionInOpenState();
 
                         return intervalFunction.apply(integer) + 1000L;
+                    } else if (exception instanceof RequestNotPermitted) {
+                        var rateLimiter = rateLimiterRegistry.rateLimiter(exception.getMessage().split("'")[1]);
+                        return rateLimiter.getRateLimiterConfig().getLimitRefreshPeriod().toMillis() + 1000L;
                     } else {
                         return Duration.ofSeconds(1).toMillis();
                     }

@@ -22,7 +22,7 @@ public class ResilienceRateLimiter {
         return RateLimiterConfig.custom()
                 .limitRefreshPeriod(Duration.ofSeconds(60))
                 .limitForPeriod(1)
-                .timeoutDuration(Duration.ofSeconds(25))
+//                .timeoutDuration(Duration.ofSeconds(25))
                 .build();
     }
 
