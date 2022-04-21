@@ -4,10 +4,12 @@ package com.abshekh.kafkastreampoc.resilience.config;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.core.IntervalFunction;
+import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
+import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.RetryRegistry;
-import lombok.extern.slf4j.Slf4j;
+import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestClientException;
@@ -15,21 +17,24 @@ import org.springframework.web.client.RestClientException;
 import java.time.Duration;
 
 @Configuration
-@Slf4j
+@AllArgsConstructor
 public class ResilienceRetry {
+    public static final String RETRY_INSTANCE_TOPIC_1 = "retry-instance-topic1";
+    public static final String RETRY_INSTANCE_TOPIC_2 = "retry-instance-topic2";
+    public static final String RETRY_INSTANCE_TOPIC_3 = "retry-instance-topic3";
+    public static final String RETRY_INSTANCE_TOPIC_4 = "retry-instance-topic4";
+
     private final RetryRegistry retryRegistry;
     private final CircuitBreakerRegistry circuitBreakerRegistry;
-
-    public ResilienceRetry(RetryRegistry retryRegistry, CircuitBreakerRegistry circuitBreakerRegistry) {
-        this.retryRegistry = retryRegistry;
-        this.circuitBreakerRegistry = circuitBreakerRegistry;
-    }
+    private final RateLimiterRegistry rateLimiterRegistry;
 
     @Bean
     public RetryConfig defaultRetryConfig() {
         return RetryConfig.custom()
                 .maxAttempts(10)
-                .retryExceptions(RestClientException.class, CallNotPermittedException.class)
+                .retryExceptions(RestClientException.class,
+                        CallNotPermittedException.class,
+                        RequestNotPermitted.class)
                 .intervalBiFunction((integer, objects) -> {
                     var exception = objects.getLeft();
                     if (exception instanceof CallNotPermittedException) {
@@ -54,7 +59,9 @@ public class ResilienceRetry {
     public RetryConfig jitterRetryConfig() {
         return RetryConfig.custom()
                 .maxAttempts(10)
-                .retryExceptions(RestClientException.class, CallNotPermittedException.class)
+                .retryExceptions(RestClientException.class,
+                        CallNotPermittedException.class,
+                        RequestNotPermitted.class)
                 .intervalBiFunction((integer, objects) -> {
                     var exception = objects.getLeft();
                     if (exception instanceof CallNotPermittedException) {
@@ -74,21 +81,21 @@ public class ResilienceRetry {
 
     @Bean
     public Retry retryInstanceTopic1(RetryConfig defaultRetryConfig) {
-        return retryRegistry.retry("retry-instance-topic1", defaultRetryConfig);
+        return retryRegistry.retry(RETRY_INSTANCE_TOPIC_1, defaultRetryConfig);
     }
 
     @Bean
     public Retry retryInstanceTopic2(RetryConfig defaultRetryConfig) {
-        return retryRegistry.retry("retry-instance-topic2", defaultRetryConfig);
+        return retryRegistry.retry(RETRY_INSTANCE_TOPIC_2, defaultRetryConfig);
     }
 
     @Bean
     public Retry retryInstanceTopic3(RetryConfig jitterRetryConfig) {
-        return retryRegistry.retry("retry-instance-topic3", jitterRetryConfig);
+        return retryRegistry.retry(RETRY_INSTANCE_TOPIC_3, jitterRetryConfig);
     }
 
     @Bean
     public Retry retryInstanceTopic4(RetryConfig defaultRetryConfig) {
-        return retryRegistry.retry("retry-instance-topic4", defaultRetryConfig);
+        return retryRegistry.retry(RETRY_INSTANCE_TOPIC_4, defaultRetryConfig);
     }
 }
