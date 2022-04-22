@@ -10,12 +10,17 @@ import io.vavr.control.Try;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.apache.kafka.streams.KeyValue;
+import org.apache.kafka.streams.kstream.Branched;
 import org.apache.kafka.streams.kstream.KStream;
+import org.apache.kafka.streams.kstream.Named;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 @Service
 @AllArgsConstructor
@@ -24,8 +29,15 @@ public class Topic4ConsumerService {
     private final PocRestClient pocRestClient;
 
     @Bean
-    public Consumer<KStream<Object, TopicMessage>> topic4Consumer() {
-        return input -> input.foreach(this::businessLogic);
+    public Function<KStream<Object, TopicMessage>, KStream<Object, TopicMessage>> topic4Consumer() {
+        return input -> {
+            try {
+                input.foreach(this::businessLogic);
+                return null;
+            } catch (Exception ignored) {
+                return input;
+            }
+        };
     }
 
     private void businessLogic(Object key, TopicMessage val) {

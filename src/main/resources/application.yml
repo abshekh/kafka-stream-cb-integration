@@ -24,6 +24,8 @@ spring.cloud.stream.bindings:
   topic4Consumer-in-0:
     destination: topic4
     group: topic4-consumer-group-1
+  topic4Consumer-out-0:
+    destination: topic4-error
   topic4Producer-out-0:
     destination: topic4
 
