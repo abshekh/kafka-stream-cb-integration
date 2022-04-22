@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 @Service
 @AllArgsConstructor
@@ -29,20 +30,26 @@ public class Topic4ConsumerService {
     private final PocRestClient pocRestClient;
 
     @Bean
-    public Function<KStream<Object, TopicMessage>, KStream<Object, TopicMessage>> topic4Consumer() {
-        return input -> {
-            try {
-                input.foreach(this::businessLogic);
-                return null;
-            } catch (Exception ignored) {
-                return input;
-            }
-        };
+    @SuppressWarnings("unchecked")
+    public Function<KStream<Object, TopicMessage>, KStream<Object, TopicMessage>[]> topic4Consumer() {
+        return input ->
+                input.map(this::businessLogic)
+                        .split(Named.as("topic2-"))
+                        .branch((key, value) -> value != null, Branched.as("error"))
+                        .noDefaultBranch()
+                        .values()
+                        .toArray(KStream[]::new);
     }
 
-    private void businessLogic(Object key, TopicMessage val) {
-        log.debug("topic4Consumer: {}", val);
-        pocRestClient.restClient4(val.getMessage());
-        log.debug("topic4Consumer end...");
+    private KeyValue<Object, TopicMessage> businessLogic(Object key, TopicMessage val) {
+        try {
+            log.debug("topic4Consumer: {}", val);
+            pocRestClient.restClient4(val.getMessage());
+            log.debug("topic4Consumer end...");
+            return null;
+        } catch (Exception ignored) {
+            log.debug("topic4Consumer end with exception...");
+            return new KeyValue<>(key, val);
+        }
     }
 }
