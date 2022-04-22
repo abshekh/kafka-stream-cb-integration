@@ -20,9 +20,8 @@ public class ResilienceRateLimiter {
     @Bean
     public RateLimiterConfig defaultRateLimiterConfig() {
         return RateLimiterConfig.custom()
-                .limitRefreshPeriod(Duration.ofSeconds(60))
+                .limitRefreshPeriod(Duration.ofSeconds(20))
                 .limitForPeriod(1)
-//                .timeoutDuration(Duration.ofSeconds(25))
                 .build();
     }
 

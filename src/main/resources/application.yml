@@ -40,7 +40,7 @@ spring.cloud.stream:
         commit.interval.ms: 1000
         processing.guarantee: exactly_once_v2
 #        max.poll.records: 1000
-#        max.poll.interval.ms: 300000
+#        max.poll.interval.ms: 300000 #Integer.MAX_VALUE
 #        session.timeout.ms: 10000
 #        heartbeat.interval.ms: 3000
       deserializationExceptionHandler: logAndContinue

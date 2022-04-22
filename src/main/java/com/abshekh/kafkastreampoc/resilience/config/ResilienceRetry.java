@@ -2,9 +2,9 @@ package com.abshekh.kafkastreampoc.resilience.config;
 
 
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.core.IntervalFunction;
-import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
+import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
@@ -16,6 +16,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestClientException;
 
 import java.time.Duration;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 @Configuration
 @AllArgsConstructor
@@ -27,32 +30,36 @@ public class ResilienceRetry {
     public static final String RETRY_INSTANCE_TOPIC_4 = "retry-instance-topic4";
 
     private final RetryRegistry retryRegistry;
-    private final CircuitBreakerRegistry circuitBreakerRegistry;
-    private final RateLimiterRegistry rateLimiterRegistry;
 
-    @Bean
-    public RetryConfig defaultRetryConfig() {
+    private final CircuitBreaker circuitBreakerInstanceTopic1;
+    private final CircuitBreaker circuitBreakerInstanceTopic2;
+    private final CircuitBreaker circuitBreakerInstanceTopic3;
+    private final CircuitBreaker circuitBreakerInstanceTopic4;
+
+    private final RateLimiter rateLimiterInstanceTopic4;
+
+    public RetryConfig defaultRetryConfig(List<CircuitBreaker> circuitBreakers,
+                                          List<RateLimiter> rateLimiters) {
         return RetryConfig.custom()
                 .maxAttempts(10)
                 .retryExceptions(RestClientException.class,
                         CallNotPermittedException.class,
                         RequestNotPermitted.class)
                 .intervalBiFunction((integer, objects) -> {
-                    var exception = objects.getLeft();
-                    log.debug("retry: {}, is RequestNotPermitted: {}", integer, exception instanceof RequestNotPermitted);
-                    if (exception instanceof CallNotPermittedException) {
-                        var ex = (CallNotPermittedException) exception;
-                        var intervalFunction = circuitBreakerRegistry.circuitBreaker(ex.getCausingCircuitBreakerName())
-                                .getCircuitBreakerConfig()
-                                .getWaitIntervalFunctionInOpenState();
+                    long duration = Duration.ofSeconds(1).toMillis();
+                    long cbDuration = circuitBreakers.stream().filter(circuitBreaker -> !circuitBreaker.tryAcquirePermission())
+                            .map(circuitBreaker -> circuitBreaker.getCircuitBreakerConfig()
+                                    .getWaitIntervalFunctionInOpenState().apply(integer) + 1000L)
+                            .max(Comparator.comparingLong(Long::longValue))
+                            .orElse(0L);
+                    long rateLimiterDuration = rateLimiters.stream().filter(rateLimiter -> !rateLimiter.acquirePermission())
+                            .map(rateLimiter -> rateLimiter.getRateLimiterConfig().getLimitRefreshPeriod().toMillis() + 1000L)
+                            .max(Comparator.comparingLong(Long::longValue))
+                            .orElse(0L);
 
-                        return intervalFunction.apply(integer) + 1000L;
-                    } else if (exception instanceof RequestNotPermitted) {
-                        var rateLimiter = rateLimiterRegistry.rateLimiter(exception.getMessage().split("'")[1]);
-                        return rateLimiter.getRateLimiterConfig().getLimitRefreshPeriod().toMillis() + 1000L;
-                    } else {
-                        return Duration.ofSeconds(1).toMillis();
-                    }
+                    final var maxDuration = Math.max(duration, Math.max(cbDuration, rateLimiterDuration));
+                    log.debug("retry backoff: {}, {}ms", integer, maxDuration);
+                    return maxDuration;
                 })
                 .build();
     }
@@ -61,47 +68,56 @@ public class ResilienceRetry {
         return IntervalFunction.ofExponentialRandomBackoff(Duration.ofSeconds(10), 2, 0.6D);
     }
 
-    @Bean
-    public RetryConfig jitterRetryConfig() {
+    public RetryConfig jitterRetryConfig(List<CircuitBreaker> circuitBreakers,
+                                         List<RateLimiter> rateLimiters) {
         return RetryConfig.custom()
                 .maxAttempts(10)
                 .retryExceptions(RestClientException.class,
                         CallNotPermittedException.class,
                         RequestNotPermitted.class)
                 .intervalBiFunction((integer, objects) -> {
-                    var exception = objects.getLeft();
-                    if (exception instanceof CallNotPermittedException) {
-                        var ex = (CallNotPermittedException) exception;
-                        var intervalFunction = circuitBreakerRegistry.circuitBreaker(ex.getCausingCircuitBreakerName())
-                                .getCircuitBreakerConfig()
-                                .getWaitIntervalFunctionInOpenState();
-
-                        return intervalFunction.apply(integer) + 1000L;
-                    } else {
-                        return jitterExponentialFunction().apply(integer);
-                    }
+                    long duration = jitterExponentialFunction().apply(integer);
+                    long cbDuration = circuitBreakers.stream().filter(circuitBreaker -> !circuitBreaker.tryAcquirePermission())
+                            .map(circuitBreaker -> circuitBreaker.getCircuitBreakerConfig()
+                                    .getWaitIntervalFunctionInOpenState().apply(integer) + 1000L)
+                            .max(Comparator.comparingLong(Long::longValue))
+                            .orElse(0L);
+                    long rateLimiterDuration = rateLimiters.stream().filter(rateLimiter -> !rateLimiter.acquirePermission())
+                            .map(rateLimiter -> rateLimiter.getRateLimiterConfig().getLimitRefreshPeriod().toMillis() + 1000L)
+                            .max(Comparator.comparingLong(Long::longValue))
+                            .orElse(0L);
+                    return Math.max(duration, Math.max(cbDuration, rateLimiterDuration));
                 })
                 .build();
 
     }
 
     @Bean
-    public Retry retryInstanceTopic1(RetryConfig defaultRetryConfig) {
-        return retryRegistry.retry(RETRY_INSTANCE_TOPIC_1, defaultRetryConfig);
+    public Retry retryInstanceTopic1() {
+        List<CircuitBreaker> circuitBreakers = List.of(circuitBreakerInstanceTopic1);
+        RetryConfig retryConfig = defaultRetryConfig(circuitBreakers, Collections.emptyList());
+        return retryRegistry.retry(RETRY_INSTANCE_TOPIC_1, retryConfig);
     }
 
     @Bean
-    public Retry retryInstanceTopic2(RetryConfig defaultRetryConfig) {
-        return retryRegistry.retry(RETRY_INSTANCE_TOPIC_2, defaultRetryConfig);
+    public Retry retryInstanceTopic2() {
+        List<CircuitBreaker> circuitBreakers = List.of(circuitBreakerInstanceTopic2);
+        RetryConfig retryConfig = defaultRetryConfig(circuitBreakers, Collections.emptyList());
+        return retryRegistry.retry(RETRY_INSTANCE_TOPIC_2, retryConfig);
     }
 
     @Bean
-    public Retry retryInstanceTopic3(RetryConfig jitterRetryConfig) {
-        return retryRegistry.retry(RETRY_INSTANCE_TOPIC_3, jitterRetryConfig);
+    public Retry retryInstanceTopic3() {
+        List<CircuitBreaker> circuitBreakers = List.of(circuitBreakerInstanceTopic3);
+        RetryConfig retryConfig = jitterRetryConfig(circuitBreakers, Collections.emptyList());
+        return retryRegistry.retry(RETRY_INSTANCE_TOPIC_3, retryConfig);
     }
 
     @Bean
-    public Retry retryInstanceTopic4(RetryConfig defaultRetryConfig) {
-        return retryRegistry.retry(RETRY_INSTANCE_TOPIC_4, defaultRetryConfig);
+    public Retry retryInstanceTopic4() {
+        List<CircuitBreaker> circuitBreakers = List.of(circuitBreakerInstanceTopic4);
+        List<RateLimiter> rateLimiters = List.of(rateLimiterInstanceTopic4);
+        RetryConfig retryConfig = defaultRetryConfig(circuitBreakers, rateLimiters);
+        return retryRegistry.retry(RETRY_INSTANCE_TOPIC_4, retryConfig);
     }
 }
